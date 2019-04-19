@@ -20,8 +20,13 @@ class ChildComponentLifeCycle extends Component {
       name: 'Mark'
     };
 
+    this.oops = this.oops.bind(this);
+
   }
 
+  componentWillUnmount() {
+    console.log('ChildComponentLifeCycle: componentWillUnmount');
+  }
 
   componentWillMount() {
     console.log('ChildComponentLifeCycle: componentWillMount');
@@ -31,21 +36,58 @@ class ChildComponentLifeCycle extends Component {
     console.log('ChildComponentLifeCycle: componentDidMount');
   }
 
+  componentWillReceiveProps(nextProps) {
+
+    console.log('ChildComponentLifeCycle : componentWillReceiveProps()');
+    console.log('nextProps: ', nextProps);
+
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    console.log('<ChildComponentLifeCycle> - shouldComponentUpdate()');
+    console.log('nextProps: ', nextProps);
+    console.log('nextState: ', nextState);
+    return true;
+  }
+
+  componentWillUpdate(nextProps, nextState) {
+
+    console.log('<ChildComponentLifeCycle> : componentWillUpdate');
+    console.log('nextProps: ', nextProps);
+    console.log('nextState: ', nextState);
+
+  }
+
+  componentDidUpdate(previousProps, previousState) {
+    console.log('ChildComponentLifeCycle: ', componentDidUpdate);
+    console.log('previousProps: ', previousProps);
+    console.log('previousState');
+
+  }
+
+  oops() {
+    this.setState(() => ({ oops: true}));
+  }
+
   render () {
     if(this.state.oops) {
       throw new Error('Something went wrong');
     }
     console.log('ChildComponentLifeCycle: render');
 
-    return (
-      <div key="name">Name:{this.props.name}</div>
-    );
+    return [
+      <div key="name">Name:{this.props.name}</div>,
+      <button key="error" onClick={this.oops}>
+        Create error
+      </button>
+    ];
 
   }
 }
 
 
 class ParentComponent extends Component {
+  
     static defaultProps = (function () {
       console.log('ParentComponent: defaultProps');
       return  {
@@ -63,12 +105,17 @@ class ParentComponent extends Component {
     this.onInputChange = this.onInputChange.bind(this);
   }
 
+
   componentWillMount() {
     console.log('ParentComponent: componentWillMount');
   }
 
   componentDidMount() {
     console.log('ParentComponent: componentDidMount');
+  }
+
+  componentWillUnmount() {
+    console.log('ParentComponent: componentWillUnmount');
   }
 
   onInputChange(e) {
@@ -78,9 +125,24 @@ class ParentComponent extends Component {
     }));
   }
 
+  componentDidCatch(err, errorInfo) {
+    console.log('componentDidCatch');
+    console.error(err);
+    console.error(errorInfo);
+    this.setState(() => ({ err, errorInfo}));
+  }
+
   render () {
     console.log('ParentComponent: render');
-
+    if (this.state.err) {
+      return  (
+        <details style={{ whiteSpace: 'pre-wrap'}}>
+          {this.state.error && this.state.error.toString()}
+          <br/>
+          {this.state.errorInfo.componentStack}
+        </details>
+      );
+    }
     return [
       <h2 key="h2">Learn about rendering and lifecycle method</h2>,
       <input key="input" value={this.state.text} onChange={this.onInputChange}/>,
